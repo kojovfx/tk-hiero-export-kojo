@@ -124,6 +124,9 @@ class ShotgunTranscodeExporter(ShotgunHieroObjectBase, FnTranscodeExporter.Trans
 
         self._quicktime_path = os.path.join(tempfile.mkdtemp(), 'preview.mov')
         self._temp_quicktime = True
+
+        #KOJO removing extra write node, using ffmpeg as a post render script
+
         nodeName = "Shotgun Screening Room Media"
 
         framerate = None
@@ -172,7 +175,17 @@ class ShotgunTranscodeExporter(ShotgunHieroObjectBase, FnTranscodeExporter.Trans
                 project=self._project,
             )
         mov_write_node = FnExternalRender.createWriteNode(**kwargs)
-        self._script.addNode(mov_write_node)
+        #self._script.addNode(mov_write_node)
+
+        #Kojo: using ffmpeg as a post render script
+        self.app.log_debug(dir(mov_write_node))
+        nodes = self._script.getNodes()
+        for x in nodes:
+            if x.type() == 'Write':
+                x.setKnob('afterRender',"sendToFFmpeg('%s')" %(self._quicktime_path.replace('\\','/')))
+
+        
+        
 
     def sequenceName(self):
         """override default sequenceName() to handle collated shots"""
